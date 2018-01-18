@@ -2,7 +2,7 @@ __precompile__()
 
 module SmoothingSplines
 
-import StatsBase: fit!, fit, RegressionModel, rle, ordinalrank, mean
+import StatsBase: predict, fit!, fit, RegressionModel, rle, ordinalrank, mean
 using Reexport
 
 export SmoothingSpline
