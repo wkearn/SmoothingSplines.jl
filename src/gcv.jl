@@ -8,7 +8,7 @@ GCV(res::AbstractVector,restrace,n=length(res)) = n*res'res/restrace^2
 function GCV(spl::SmoothingSpline)
     res = residuals(spl)
     restrace = residualtrace(spl)
-    GCV(res,resmat)
+    GCV(res,restrace)
 end
 
 GCV(λ,X::AbstractVector,Y::AbstractVector) = GCV(fit(SmoothingSpline,X,Y,λ))
