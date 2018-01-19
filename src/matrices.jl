@@ -86,6 +86,41 @@ function Base.LinAlg.A_mul_B!(out::AbstractMatrix, Q::ReinschQ, B::AbstractMatri
     out
 end
 
+function trace_multiply!(out::AbstractVector,Q::ReinschQ,B::AbstractMatrix)
+    # Multiply Q*B but only the diagonal elements
+    m = length(out)
+    o = size(Q,2)
+    m == size(Q,1) || throw(DimensionMismatch())
+    m == size(B,2) || throw(DimensionMismatch())
+    size(Q,2) == size(B,1) || throw(DimensionMismatch())
+    h = Q.h
+
+    @inbounds for j in 1:m
+            out[j] = 0
+            #=
+            (k == i) Q[i,k] = 1/h[i]
+            (k == i-1) Q[i,k] = -1/h[i-1] - 1/h[i]
+            (k == i-2) Q[i,k] = 1/h[i-1]
+
+            =#
+            if j <= o
+                out[j] += (1/h[j])*B[j,j]
+            end
+            if j > 1 && j <= o+1
+                out[j] += (-1/h[j-1] - 1/h[j])*B[j-1,j]
+            end
+            if j > 2
+                out[j] += (1/h[j-1])*B[j-2,j]
+            end
+            #=
+            for k in max(1,i-2):min(i,o)
+                out[i,j] += Q[i,k]*B[k,j]
+            end
+            =#
+    end
+    out    
+end
+
 
 immutable ReinschR{T} <: AbstractMatrix{T}
     h::Vector{T}
