@@ -142,5 +142,10 @@ function running_rle_mean!{T<:Real}(g::AbstractVector{T}, w::AbstractVector{T}, 
   g
 end
 
+function StatsBase.residuals(spl::SmoothingSpline)
+    spl.Yorig[spl.Xrank] - predict(spl)
+end
+
+include("gcv.jl")
 
 end # module

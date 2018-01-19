@@ -50,6 +50,42 @@ function Base.LinAlg.A_mul_B!(out::AbstractVector, Q::ReinschQ, g::AbstractVecto
     out
 end
 
+function Base.LinAlg.A_mul_B!(out::AbstractMatrix, Q::ReinschQ, B::AbstractMatrix)
+    m,n = size(out)
+    o = size(Q,2)
+    m == size(Q,1) || throw(DimensionMismatch())
+    n == size(B,2) || throw(DimensionMismatch())
+    size(Q,2) == size(B,1) || throw(DimensionMismatch())
+    h = Q.h
+
+    @inbounds for j in 1:n
+        for i in 1:m
+            out[i,j] = 0
+            #=
+            (k == i) Q[i,k] = 1/h[i]
+            (k == i-1) Q[i,k] = -1/h[i-1] - 1/h[i]
+            (k == i-2) Q[i,k] = 1/h[i-1]
+
+            =#
+            if i <= o
+                out[i,j] += (1/h[i])*B[i,j]
+            end
+            if i > 1 && i <= o+1
+                out[i,j] += (-1/h[i-1] - 1/h[i])*B[i-1,j]
+            end
+            if i > 2
+                out[i,j] += (1/h[i-1])*B[i-2,j]
+            end
+            #=
+            for k in max(1,i-2):min(i,o)
+                out[i,j] += Q[i,k]*B[k,j]
+            end
+            =#
+        end
+    end
+    out
+end
+
 
 immutable ReinschR{T} <: AbstractMatrix{T}
     h::Vector{T}
