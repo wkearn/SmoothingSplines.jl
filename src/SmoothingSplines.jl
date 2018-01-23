@@ -27,6 +27,8 @@ type SmoothingSpline{T<:LAPACKFloat} <: RegressionModel
     λ::T
 end
 
+include("gcv.jl")
+
 function fit{T<:LAPACKFloat}(::Type{SmoothingSpline}, X::AbstractVector{T}, Y::AbstractVector{T}, λ::T, wts::AbstractVector{T}=ones(Y))
     Xrank = ordinalrank(X) # maybe speed this up when already sorted
     Xperm = sortperm(X)
@@ -45,6 +47,8 @@ function fit{T<:LAPACKFloat}(::Type{SmoothingSpline}, X::AbstractVector{T}, Y::A
                 zeros(Xdesign), zeros(T,length(Xdesign)-2), λ)
     fit!(spl)
 end
+
+fit{T<:LAPACKFloat}(::Type{SmoothingSpline},X::AbstractVector{T},Y::AbstractVector{T},λ::GCV,wts::AbstractVector{T}=ones(Y)) = gcv(X,Y,wts)
 
 function fit!{T<:LAPACKFloat}(spl::SmoothingSpline{T})
     Y = spl.Ydesign
@@ -145,7 +149,5 @@ end
 function StatsBase.residuals(spl::SmoothingSpline)
     spl.Yorig[spl.Xrank] - predict(spl)
 end
-
-include("gcv.jl")
 
 end # module

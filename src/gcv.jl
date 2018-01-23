@@ -1,17 +1,24 @@
 # Generalized cross-validation for smoothing splines
+using Optim
+
 export GCV
 
-GCV(res::AbstractVector,resmat::AbstractMatrix,n=length(res)) = n*res'res/trace(resmat)^2
-
-GCV(res::AbstractVector,restrace,n=length(res)) = n*res'res/restrace^2
-
-function GCV(spl::SmoothingSpline)
-    res = residuals(spl)
-    restrace = residualtrace(spl)
-    GCV(res,restrace)
+struct GCV
+    a
+    b
 end
 
-GCV(λ,X::AbstractVector,Y::AbstractVector) = GCV(fit(SmoothingSpline,X,Y,λ))
+score(res::AbstractVector,resmat::AbstractMatrix,n=length(res)) = n*res'res/trace(resmat)^2
+
+score(res::AbstractVector,restrace,n=length(res)) = n*res'res/restrace^2
+
+function score(spl::SmoothingSpline)
+    res = residuals(spl)
+    restrace = residualtrace(spl)
+    score(res,restrace)
+end
+
+score(λ,X::AbstractVector,Y::AbstractVector,wts::AbstractVector) = score(fit(SmoothingSpline,X,Y,λ,wts))
 
 function residualtrace(spl::SmoothingSpline)
     h = diff(spl.Xdesign)
@@ -26,3 +33,9 @@ function residualtrace(spl::SmoothingSpline)
     broadcast!(*,g,g,λ)
     sum(g)
 end
+
+function gcv(X::AbstractVector,Y::AbstractVector,wts::AbstractVector,opts::GCV)
+    res = optimize(λ->score(λ,X,Y,wts),opts.a,opts.b)
+    fit(SmoothingSpline,X,Y,Optim.minimizer(res))
+end
+    
